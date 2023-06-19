@@ -3,9 +3,14 @@ package com.example.jni;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.example.jni.databinding.ActivityMainBinding;
+
+import java.io.File;
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,11 +20,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ActivityMainBinding binding;
+    private String logFilePath;
+
+    public String ensureLogFile() {
+        if (this.logFilePath == null) {
+            File[] dirs = getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
+            String dir = null;
+            if (dirs.length > 0) {
+                dir = dirs[0].getAbsolutePath();
+            } else {
+                return null;
+            }
+
+            File file = new File(dir, "leak_report.txt");
+            String filePath = file.getAbsolutePath();
+            Log.d("log file path: ", filePath);
+            if (!file.exists()) {
+                try {
+                    file.createNewFile();
+                    Log.d("", "创建日志文件成功");
+                } catch (IOException e) {
+                    Log.d("", "创建日志文件失败");
+                    throw new RuntimeException(e);
+                }
+            }
+            this.logFilePath = filePath;
+        }
+        return this.logFilePath;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        String file = this.ensureLogFile();
+        initLeakTracer(file);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -33,4 +67,6 @@ public class MainActivity extends AppCompatActivity {
      * which is packaged with this application.
      */
     public native String stringFromJNI();
+
+    public native void initLeakTracer(String path);
 }
