@@ -1,0 +1,25 @@
+# CMake generation dependency list for this directory.
+G:/cmake/share/cmake-3.25/Modules/CMakeCInformation.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeCXXInformation.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeGenericSystem.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeRCInformation.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake
+G:/cmake/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake
+G:/cmake/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+G:/cmake/share/cmake-3.25/Modules/Compiler/MSVC-C.cmake
+G:/cmake/share/cmake-3.25/Modules/Compiler/MSVC-CXX.cmake
+G:/cmake/share/cmake-3.25/Modules/Compiler/MSVC.cmake
+G:/cmake/share/cmake-3.25/Modules/Platform/Windows-MSVC-C.cmake
+G:/cmake/share/cmake-3.25/Modules/Platform/Windows-MSVC-CXX.cmake
+G:/cmake/share/cmake-3.25/Modules/Platform/Windows-MSVC.cmake
+G:/cmake/share/cmake-3.25/Modules/Platform/Windows.cmake
+G:/cmake/share/cmake-3.25/Modules/Platform/WindowsPaths.cmake
+G:/proj/learn-jni/app/jni/leak-tracer/CMakeLists.txt
+G:/proj/learn-jni/app/jni/leak-tracer/test/CMakeLists.txt
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/3.25.0-rc4/CMakeCCompiler.cmake
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/3.25.0-rc4/CMakeCXXCompiler.cmake
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/3.25.0-rc4/CMakeRCCompiler.cmake
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/3.25.0-rc4/CMakeSystem.cmake

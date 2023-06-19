@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="G:\proj\learn-jni\app\jni\leak-tracer\test\build\CMakeFiles\5734213df4e0e970ba4a4c555fa0b767\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{D3CEBD63-216E-3913-B928-192E282D9CFB}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

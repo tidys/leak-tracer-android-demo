@@ -1,0 +1,4 @@
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/leaktracer.dir
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/leak-tracer-example.dir
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/ALL_BUILD.dir
+G:/proj/learn-jni/app/jni/leak-tracer/test/build/CMakeFiles/ZERO_CHECK.dir
