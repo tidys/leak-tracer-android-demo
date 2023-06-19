@@ -5,12 +5,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.example.jni.databinding.ActivityMainBinding;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,6 +53,23 @@ public class MainActivity extends AppCompatActivity {
         return this.logFilePath;
     }
 
+    public void showLogContent() {
+        String filePath = this.ensureLogFile();
+        try {
+            File file = new File(filePath);
+            InputStream inputStream = new FileInputStream(file);
+            byte[] bytes = new byte[(int) file.length()];
+            inputStream.read(bytes);
+            String content = new String(bytes);
+            inputStream.close();
+            Log.d("", "File content: \n" + content);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +81,13 @@ public class MainActivity extends AppCompatActivity {
         // Example of a call to a native method
         TextView tv = binding.sampleText;
         tv.setText(stringFromJNI());
+
+        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.this.showLogContent();
+            }
+        });
     }
 
     /**
