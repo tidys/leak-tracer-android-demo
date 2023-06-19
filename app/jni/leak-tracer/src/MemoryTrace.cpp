@@ -13,25 +13,29 @@
 
 #include <sys/syscall.h>
 
-#include "include/MemoryTrace.hpp"
+#include "MemoryTrace.hpp"
 #include <ctype.h>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <string>
-#include <android/log.h>
+
 #include <dlfcn.h>
 #include <assert.h>
 
-
 #include <stdio.h>
-#include "include/LeakTracer_l.hpp"
+
+#include <unwind.h>
+
+#include "LeakTracer_l.hpp"
 
 // glibc/eglibc: dlsym uses calloc internally now, so use weak symbol to get their symbol
 extern "C" void* __libc_malloc(size_t size) __attribute__((weak));
 extern "C" void  __libc_free(void* ptr) __attribute__((weak));
 extern "C" void* __libc_realloc(void *ptr, size_t size) __attribute__((weak));
 extern "C" void* __libc_calloc(size_t nmemb, size_t size) __attribute__((weak));
+
+static Dl_info s_P2pSODlInfo;
 
 namespace leaktracer {
 
@@ -114,10 +118,12 @@ MemoryTrace::init_no_alloc_allowed()
 			if (curfunc->libcsymbol) {
 				*curfunc->localredirect = curfunc->libcsymbol;
 			} else {
-				*curfunc->localredirect = dlsym(RTLD_NEXT, curfunc->symbname); 
+				*curfunc->localredirect = dlsym(RTLD_NEXT, curfunc->symbname);
 			}
 		}
 	} 
+
+ 	dladdr((const void*)init_no_alloc_allowed, &s_P2pSODlInfo);
 
 	__instance = reinterpret_cast<MemoryTrace*>(&s_memoryTrace_instance);
 
@@ -239,12 +245,7 @@ void MemoryTrace::MemoryTraceOnExit(void)
 		TRACE((stderr, "LeakTracer: writing leak report in %s\n", reportName));
 		leaktracer::MemoryTrace::GetInstance().writeLeaksToFile(reportName);
 	}
-	
-	const char *exitCode = getenv("LEAKTRACER_EXIT_CODE_ON_LEAKS");
-	if (exitCode != NULL && !leaktracer::MemoryTrace::GetInstance().__allocations.empty())
-	{
-		exit(atoi(exitCode));
-	}
+
 }
 
 MemoryTrace::~MemoryTrace(void)
@@ -278,6 +279,37 @@ void MemoryTrace::removeThreadOptions(ThreadMonitoringOptions *pOptions)
 	}
 }
 
+struct TraceHandle {
+    void **backtrace;
+    int pos;
+};
+
+_Unwind_Reason_Code Unwind_Trace_Fn(_Unwind_Context *context, void *hnd) {
+    struct TraceHandle *traceHandle = (struct TraceHandle *) hnd;
+    _Unwind_Word ip = _Unwind_GetIP(context);
+    if (traceHandle->pos != ALLOCATION_STACK_DEPTH) {
+        traceHandle->backtrace[traceHandle->pos] = (void *) (ip - (_Unwind_Word) s_P2pSODlInfo.dli_fbase);
+        ++traceHandle->pos;
+        return _URC_NO_REASON;
+    }
+    return _URC_END_OF_STACK;
+}
+
+// stores allocation stack, up to ALLOCATION_STACK_DEPTH
+// frames
+void MemoryTrace::storeAllocationStack(void* arr[ALLOCATION_STACK_DEPTH])
+{
+    unsigned int iIndex = 0;
+
+    TraceHandle traceHandle;
+    traceHandle.backtrace = arr;
+    traceHandle.pos = 0;
+    _Unwind_Backtrace(Unwind_Trace_Fn, &traceHandle);
+
+    // fill remaining spaces
+    for (iIndex = traceHandle.pos; iIndex < ALLOCATION_STACK_DEPTH; iIndex++)
+        arr[iIndex] = NULL;
+}
 
 // writes all memory leaks to given stream
 void MemoryTrace::writeLeaksPrivate(std::ostream &out)
@@ -318,65 +350,14 @@ void MemoryTrace::writeLeaksPrivate(std::ostream &out)
 		out << "leak, ";
 		out << "time="  << std::fixed << std::right << std::setprecision(precision) << std::setfill('0') << std::setw(maxsecwidth+1+precision) << d << ", "; // setw(16) ?
 		out << "stack=";
-#ifdef BACKTRACE_SYMBOLS_USED
-        unsigned int i_depth = 0;
-        for (i_depth = 0; i_depth < ALLOCATION_STACK_DEPTH; i_depth++) {
-            if (info->allocStack[i_depth] == NULL) break;
+		for (unsigned int i = 0; i < ALLOCATION_STACK_DEPTH; i++) {
+			if (info->allocStack[i] == NULL) break;
 
-            if (i_depth > 0) out << ' ';
-            out << info->allocStack[i_depth];
-        }
-        out << '\n';
-        char** trace_symbols = (char**)backtrace_symbols(info->allocStack, i_depth);
-        if (NULL != trace_symbols) {
-            size_t name_size = 64;
-            char* name = (char*)malloc(name_size);
-            for (unsigned int j = 0; j < i_depth; j++) {
-                char* begin_name = 0;
-                char* begin_offset = 0;
-                char* end_offset = 0;
-                for (char* p = trace_symbols[j]; *p; ++p) {
-                    if (*p == '(') {
-                        begin_name = p;
-                    }
-                    else if (*p == '+' && begin_name) {
-                        begin_offset = p;
-                    }
-                    else if (*p == ')' && begin_offset) {
-                        end_offset = p;
-                        break;
-                    }
-                }
-                if (begin_name && begin_offset && end_offset) {
-                    *begin_name++ = '\0';
-                    *begin_offset++ = '\0';
-                    *end_offset = '\0';
-                    int status = -4;
-                    char* ret = abi::__cxa_demangle(begin_name, name, &name_size, &status);
-                    if (0 == status) {
-                        name = ret;
-                        out << trace_symbols[j] << ":" << name << "+" << begin_offset;
-                    }
-                    else {
-                        out << trace_symbols[j] << ":" << begin_name << "()+" << begin_offset;
-                    }
-                }
-                else {
-                    out << trace_symbols[j];
-                }
-                out << '\n';
-            }
-            free(trace_symbols);
-        }
-#else
-        for (unsigned int i = 0; i < ALLOCATION_STACK_DEPTH; i++) {
-            if (info->allocStack[i] == NULL) break;
+			if (i > 0) out << ' ';
+			out << info->allocStack[i];
 
-            if (i > 0) out << ' ';
-            out << info->allocStack[i];
-        }
-        out << ", ";
-#endif
+		}
+		out << ", ";
 
 		out << "size=" << info->size << ", ";
 
@@ -400,9 +381,6 @@ void MemoryTrace::writeLeaks(std::ostream &out)
 	InternalMonitoringDisablerThreadDown();
 }
 
-void MemoryTrace::androidLog(const char* log){
-//	__android_log_print(ANDROID_LOG_INFO, "TAG", "%s", log);
-}
 
 // writes all memory leaks to given stream
 void MemoryTrace::writeLeaksToFile(const char* reportFilename)

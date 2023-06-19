@@ -3,7 +3,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := leaktracer
 LOCAL_MODULE_FILENAME := libleaktracer
 LOCAL_ARM_MODE := arm
-LOCAL_LDLIBS := -landroid -llog
+LOCAL_LDLIBS += -landroid -llog
 LOCAL_SRC_FILES := \
 src/MemoryTrace.cpp \
 src/AllocationHandlers.cpp 
