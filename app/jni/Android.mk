@@ -4,8 +4,9 @@ LOCAL_MODULE := jni
 LOCAL_SRC_FILES := ../src/main/cpp/native-lib.cpp
 LOCAL_LDFLAGS += -Wl,-Bsymbolic
 #--unresolved-symbols=ignore-all
-LOCAL_CFLAGS += -fPIC -g
+LOCAL_CFLAGS += -fPIC -g -ffunction-sections -fdata-sections
 LOCAL_CPPFLAGS += -g
+LOCAL_LDFLAGS += -Wl,--gc-sections
 
 LOCAL_SHARED_LIBRARIES += leaktracer
 

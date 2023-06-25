@@ -6,6 +6,10 @@ android {
     namespace 'com.example.jni'
     compileSdk 33
 
+    packagingOptions {
+        doNotStrip "*/arm64-v8a/*.so"
+    }
+
     defaultConfig {
         applicationId "com.example.jni"
         minSdk 24
