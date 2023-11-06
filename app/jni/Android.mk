@@ -7,8 +7,11 @@ LOCAL_LDFLAGS += -Wl,-Bsymbolic
 LOCAL_CFLAGS += -fPIC -g -ffunction-sections -fdata-sections
 LOCAL_CPPFLAGS += -g
 LOCAL_LDFLAGS += -Wl,--gc-sections
+LOCAL_EXPORT_CFLAGS := -D
 
+ifeq ($(USE_LEAK_TRACER), 1)
 LOCAL_SHARED_LIBRARIES += leaktracer
+endif
 
 LOCAL_LDLIBS := -landroid -llog
 # include $(BUILD_STATIC_LIBRARY)
@@ -16,5 +19,6 @@ include $(BUILD_SHARED_LIBRARY)
 
 $(call import-add-path,$(LOCAL_PATH))
 
+ifeq ($(USE_LEAK_TRACER), 1)
 $(call import-module,leak-tracer)
-
+endif

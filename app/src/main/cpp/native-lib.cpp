@@ -3,8 +3,10 @@
 #include <unwind.h>
 #include <android/log.h>
 #include <dlfcn.h>
-#include "leak-tracer/include/MemoryTrace.hpp"
 
+#if USE_LEAK_TRACER
+#include "leak-tracer/include/MemoryTrace.hpp"
+#endif
 std::string leakReportFile;
 
 // 测试基地址的一些代码
@@ -45,13 +47,15 @@ void test_address() {
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_jni_MainActivity_stringFromJNI(JNIEnv *env, jobject /* this */) {
+#if USE_LEAK_TRACER
     leaktracer::MemoryTrace::GetInstance().startMonitoringAllThreads();
     malloc(100);
-    std::string hello = "Hello from C++";
     leaktracer::MemoryTrace::GetInstance().stopAllMonitoring();
     if (!leakReportFile.empty()) {
         leaktracer::MemoryTrace::GetInstance().writeLeaksToFile(leakReportFile.c_str());
     }
+#endif
+    std::string hello = "Hello from C++";
     return env->NewStringUTF(hello.c_str());
 }
 
@@ -61,4 +65,16 @@ Java_com_example_jni_MainActivity_initLeakTracer(JNIEnv *env, jobject, jstring f
     leakReportFile = path;
 //    test_address();
     env->ReleaseStringUTFChars(filePath, path);
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_jni_MainActivity_callTest(JNIEnv *env, jobject thiz) {
+    // test crash
+#if USE_LEAK_TRACER
+    __android_log_print(ANDROID_LOG_INFO, "call-test", "yes");
+#else
+    __android_log_print(ANDROID_LOG_INFO, "call-test", "no");
+#endif
+    int* ptr= nullptr;
+//    *ptr;
 }

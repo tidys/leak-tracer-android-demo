@@ -88,6 +88,13 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.showLogContent();
             }
         });
+
+        findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callTest();
+            }
+        });
     }
 
     /**
@@ -97,4 +104,6 @@ public class MainActivity extends AppCompatActivity {
     public native String stringFromJNI();
 
     public native void initLeakTracer(String path);
+
+    public native void callTest();
 }
